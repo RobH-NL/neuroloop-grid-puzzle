@@ -57,27 +57,27 @@ function initializeGridPuzzle() {
         tileEl.className = 'grid-tile';
         tileEl.dataset.index = i;
 
-        // Double tap to rotate on iPad
+        // Double tap or hold detection variables
         let lastTap = 0;
+        let dragGhost = null;
+
+        // BUG FIX 1 & 2: Prevent Safari from hijacking the touch start
         tileEl.addEventListener('touchstart', (e) => {
+            // Stops Safari from processing a double tap as a camera zoom
+            e.preventDefault(); 
+            
             const now = performance.now();
             if (now - lastTap < 250) {
                 rotateTile(i, tileEl);
                 lastTap = 0;
-                e.preventDefault(); 
                 return;
             }
             lastTap = now;
-        });
 
-        // HIGH PERFORMANCE LIGHTWEIGHT DRAG VIA CSS CLASS INJECTION
-        let dragGhost = null;
-
-        tileEl.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return;
             const touch = e.touches[0];
             
-            // Create an ultra-lightweight placeholder box to drag instead of the full image chunk
+            // Create the placeholder drag box
             dragGhost = document.createElement('div');
             dragGhost.className = 'drag-indicator-box';
             dragGhost.style.width = `${tileEl.offsetWidth}px`;
@@ -87,17 +87,21 @@ function initializeGridPuzzle() {
             document.body.appendChild(dragGhost);
             
             tileEl.classList.add('source-tile-faded');
-        });
+        }, { passive: false }); // 'passive: false' allows us to use preventDefault() safely
 
+        // BUG FIX 1: Prevent Safari from scrolling or moving the screen while dragging
         tileEl.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // This stops the screen from sliding or bouncing!
+            
             if (!dragGhost) return;
             const touch = e.touches[0];
-            // Follow the finger instantaneously with zero graphic processing lag
             dragGhost.style.left = `${touch.clientX - dragGhost.offsetWidth/2}px`;
             dragGhost.style.top = `${touch.clientY - dragGhost.offsetHeight/2}px`;
-        });
+        }, { passive: false });
 
         tileEl.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            
             if (!dragGhost) return;
             document.body.removeChild(dragGhost);
             dragGhost = null;
@@ -115,7 +119,7 @@ function initializeGridPuzzle() {
                     checkWinCondition();
                 }
             }
-        });
+        }, { passive: false });
 
         container.appendChild(tileEl);
     }
