@@ -143,33 +143,76 @@ input, select {
     -webkit-tap-highlight-color: transparent;
 }
 /* Disable native browser body bouncing on iPad during touch dragging */
+/* ==========================================================================
+   IPAD GESTURE BLOCKERS & PERFORMANCE OPTIMIZATIONS
+   ========================================================================== */
+
+/* Freeze the root window environment to stop all Safari layout shifting */
 html, body {
-    overflow: hidden;
-    position: fixed;
+    margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
-    touch-action: none;
+    overflow: hidden !important;
+    position: fixed;
+    /* Shuts down pull-to-refresh and rubber-banding on iOS completely */
+    overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
+    overscroll-behavior-x: none !important;
+    touch-action: none !important;
 }
 
 #app-container {
-    touch-action: none;
+    width: 100%;
+    max-width: 500px;
+    padding: 24px;
+    background: var(--bg-surface);
+    border-radius: 6px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    box-sizing: border-box;
+    /* Locks container scaling assets */
+    touch-action: none !important;
+    overscroll-behavior: none !important;
 }
 
-/* Force the iPad to handle touch translations instantly without page lag */
+/* Ensure the puzzle grid container itself keeps context boundaries secure */
+#puzzle-grid-container {
+    display: grid;
+    gap: 2px;
+    background-color: var(--bg-main);
+    padding: 4px;
+    border-radius: 4px;
+    margin: 20px auto;
+    max-width: 400px;
+    max-height: 400px;
+    aspect-ratio: 1 / 1;
+    touch-action: none !important;
+    overscroll-behavior: none !important;
+}
+
+/* Optimize the tiles to respond instantly to physical finger movement */
 .grid-tile {
+    background-repeat: no-repeat;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-sizing: border-box;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    
+    /* Bypasses mobile Safari action blocks */
     touch-action: none !important;
     -webkit-user-drag: none !important;
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* Enhanced tracking layout wrapper state */
+/* Keep the dragged tile locked above everything cleanly without jittering */
 .grid-tile.dragging-active {
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
     opacity: 0.85;
     z-index: 9999 !important;
-    transition: none !important;
-    pointer-events: none; /* Prevents the tile from blocking elementFromPoint detection */
+    transition: none !important; /* Disables transitions so it doesn't try to animate behind your finger */
+    pointer-events: none; 
 }
-
