@@ -142,16 +142,33 @@ input, select {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
-.grid-tile {
-    /* Critical iOS Overrides */
-    touch-action: none !important;
-    -webkit-user-drag: none;
-    -webkit-touch-callout: none;
+/* Disable native browser body bouncing on iPad during touch dragging */
+html, body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
 }
 
-/* Gives the tile a slight lift effect while you are dragging it on your iPad */
+#app-container {
+    touch-action: none;
+}
+
+/* Force the iPad to handle touch translations instantly without page lag */
+.grid-tile {
+    touch-action: none !important;
+    -webkit-user-drag: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
+/* Enhanced tracking layout wrapper state */
 .grid-tile.dragging-active {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    opacity: 0.9;
-    transition: none !important; /* Disables smooth transitions so it sticks to your finger instantly */
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+    opacity: 0.85;
+    z-index: 9999 !important;
+    transition: none !important;
+    pointer-events: none; /* Prevents the tile from blocking elementFromPoint detection */
 }
