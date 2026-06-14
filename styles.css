@@ -172,3 +172,4 @@ html, body {
     transition: none !important;
     pointer-events: none; /* Prevents the tile from blocking elementFromPoint detection */
 }
+
