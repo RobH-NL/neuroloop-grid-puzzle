@@ -9,7 +9,6 @@ let gridData = {
 
 let tileOrder = []; 
 const rotations = [0, 90, 180, 270];
-let selectedTileIndex = null; 
 
 function switchScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -38,7 +37,6 @@ function initializeGridPuzzle() {
     container.style.gridTemplateRows = `repeat(${size}, 1fr)`;
 
     tileOrder = [];
-    selectedTileIndex = null;
     
     for (let i = 0; i < size * size; i++) {
         const randomRotationIdx = Math.floor(Math.random() * rotations.length);
@@ -53,83 +51,69 @@ function initializeGridPuzzle() {
         [tileOrder[i], tileOrder[j]] = [tileOrder[j], tileOrder[i]];
     }
 
-    // Build grid structure
+    // Build the grid
     for (let i = 0; i < size * size; i++) {
         const tileEl = document.createElement('div');
         tileEl.className = 'grid-tile';
         tileEl.dataset.index = i;
-        tileEl.draggable = true; 
 
-        // 1. DESKTOP MOUSE ACTIONS
-        tileEl.addEventListener('click', (e) => {
-            if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                rotateTile(i, tileEl);
-            } else {
-                handleTileSelection(i, tileEl, imageUrl);
-            }
-        });
-
-        tileEl.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            rotateTile(i, tileEl);
-        });
-
-        tileEl.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', i));
-        tileEl.addEventListener('dragover', (e) => e.preventDefault());
-        tileEl.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const originIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-            executeSwap(originIndex, i, imageUrl);
-        });
-
-        // 2. IPAD / MOBILE TOUCH DRAG ENGINE
-        let touchStartX = 0;
-        let touchStartY = 0;
+        // Double tap to rotate on iPad
         let lastTap = 0;
-
         tileEl.addEventListener('touchstart', (e) => {
             const now = performance.now();
-            // Detect Double Tap to Rotate on iPad
-            if (now - lastTap < 300) {
+            if (now - lastTap < 250) {
                 rotateTile(i, tileEl);
                 lastTap = 0;
+                e.preventDefault(); 
                 return;
             }
             lastTap = now;
+        });
 
+        // HIGH PERFORMANCE LIGHTWEIGHT DRAG VIA CSS CLASS INJECTION
+        let dragGhost = null;
+
+        tileEl.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return;
             const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
             
-            tileEl.classList.add('dragging-active');
-        }, { passive: true });
+            // Create an ultra-lightweight placeholder box to drag instead of the full image chunk
+            dragGhost = document.createElement('div');
+            dragGhost.className = 'drag-indicator-box';
+            dragGhost.style.width = `${tileEl.offsetWidth}px`;
+            dragGhost.style.height = `${tileEl.offsetHeight}px`;
+            dragGhost.style.left = `${touch.clientX - tileEl.offsetWidth/2}px`;
+            dragGhost.style.top = `${touch.clientY - tileEl.offsetHeight/2}px`;
+            document.body.appendChild(dragGhost);
+            
+            tileEl.classList.add('source-tile-faded');
+        });
 
         tileEl.addEventListener('touchmove', (e) => {
-            if (!tileEl.classList.contains('dragging-active')) return;
+            if (!dragGhost) return;
             const touch = e.touches[0];
-            const deltaX = touch.clientX - touchStartX;
-            const deltaY = touch.clientY - touchStartY;
-            
-            // Visually drifts the scrambled chunk under the user's finger cleanly
-            tileEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${tileOrder[i].currentRotation}deg)`;
-            tileEl.style.zIndex = "1000";
-        }, { passive: true });
+            // Follow the finger instantaneously with zero graphic processing lag
+            dragGhost.style.left = `${touch.clientX - dragGhost.offsetWidth/2}px`;
+            dragGhost.style.top = `${touch.clientY - dragGhost.offsetHeight/2}px`;
+        });
 
         tileEl.addEventListener('touchend', (e) => {
-            if (!tileEl.classList.contains('dragging-active')) return;
-            tileEl.classList.remove('dragging-active');
-            tileEl.style.transform = '';
-            tileEl.style.zIndex = '';
+            if (!dragGhost) return;
+            document.body.removeChild(dragGhost);
+            dragGhost = null;
+            tileEl.classList.remove('source-tile-faded');
 
             const touch = e.changedTouches[0];
-            // Find what element sits under the finger's end coordinates
             const elementTarget = document.elementFromPoint(touch.clientX, touch.clientY);
             
             if (elementTarget && elementTarget.classList.contains('grid-tile')) {
                 const targetIndex = parseInt(elementTarget.dataset.index, 10);
-                executeSwap(i, targetIndex, imageUrl);
-            } else {
-                updateTileVisuals(imageUrl); // Snap back if dropped outside
+                if (i !== targetIndex) {
+                    [tileOrder[i], tileOrder[targetIndex]] = [tileOrder[targetIndex], tileOrder[i]];
+                    gridData.total_moves++;
+                    updateTileVisuals(imageUrl);
+                    checkWinCondition();
+                }
             }
         });
 
@@ -145,27 +129,6 @@ function rotateTile(index, tileEl) {
     tileEl.style.transform = `rotate(${tile.currentRotation}deg)`;
     gridData.rotations_performed++;
     checkWinCondition();
-}
-
-function handleTileSelection(index, tileEl, imageUrl) {
-    const allTiles = document.querySelectorAll('.grid-tile');
-    if (selectedTileIndex === null) {
-        selectedTileIndex = index;
-        tileEl.classList.add('selected-chunk');
-    } else {
-        executeSwap(selectedTileIndex, index, imageUrl);
-        selectedTileIndex = null;
-        allTiles.forEach(t => t.classList.remove('selected-chunk'));
-    }
-}
-
-function executeSwap(origin, target, imageUrl) {
-    if (origin !== target && !isNaN(origin) && !isNaN(target)) {
-        [tileOrder[origin], tileOrder[target]] = [tileOrder[target], tileOrder[origin]];
-        gridData.total_moves++;
-        updateTileVisuals(imageUrl);
-        checkWinCondition();
-    }
 }
 
 function updateTileVisuals(imageUrl) {
