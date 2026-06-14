@@ -142,3 +142,16 @@ input, select {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
+.grid-tile {
+    /* Critical iOS Overrides */
+    touch-action: none !important;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+}
+
+/* Gives the tile a slight lift effect while you are dragging it on your iPad */
+.grid-tile.dragging-active {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    opacity: 0.9;
+    transition: none !important; /* Disables smooth transitions so it sticks to your finger instantly */
+}
