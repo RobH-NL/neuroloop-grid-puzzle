@@ -136,3 +136,9 @@ input, select {
     box-shadow: 0 0 15px rgba(237, 242, 247, 0.6);
     z-index: 10;
 }
+/* Removes mobile hover delays and optimizes touch-response latency */
+.grid-tile {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
