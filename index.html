@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroLoop Spatial Grid Exercise</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app-container">
+        <div class="game-brand-header">
+            <img src="NL_Temp_Logo.png" alt="NeuroLoop Logo" class="app-logo">
+        </div>
+
+        <section id="screen-setup" class="screen active">
+            <h2>Spatial Grid Configuration</h2>
+            
+            <div class="form-group">
+    <label>Select Target Exercise Image:</label>
+    <select id="select-image">
+        <!-- Make sure your logo is updated to .png here too! -->
+        <option value="NL_Temp_Logo.png">NeuroLoop Logo Grid</option>
+        <option value="Mona_Lisa_NL.jpg">Abstract Geometry</option>
+        <option value="flow.jpg">Flow State Pattern</option>
+    </select>
+</div>
+
+            <div class="form-group">
+                <label>Grid Complexity (Cognitive Load):</label>
+                <select id="select-grid-size">
+                    <option value="2">Easy (2x2 - 4 Complexity Chunks)</option>
+                    <option value="3" selected>Medium (3x3 - 9 Complexity Chunks)</option>
+                    <option value="4">Hard (4x4 - 16 Complexity Chunks)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Participant ID:</label>
+                <input type="text" id="input-participant" value="P-001">
+            </div>
+            
+            <div class="form-group">
+                <label>Session ID:</label>
+                <input type="text" id="input-session" value="S-001">
+            </div>
+
+            <button id="btn-start" class="btn">Initialize Grid Session</button>
+        </section>
+
+        <section id="screen-puzzle" class="screen">
+            <header class="exercise-meta">
+                <span id="meta-display">Spatial Grid Active</span>
+            </header>
+            
+            <p class="instruction-text">Click a tile to select it, then click another to swap positions. <br><strong>Right-Click</strong> a tile to rotate it 90° clockwise.</p>
+
+            <div id="puzzle-grid-container"></div>
+
+            <footer class="exercise-controls">
+                <button id="btn-reset" class="btn secondary">Reset Grid</button>
+            </footer>
+        </section>
+
+        <section id="screen-solved" class="screen">
+            <h2>Grid Coherence Restored</h2>
+            <p class="neutral-msg">Cognitive tracking metrics successfully saved down to memory.</p>
+            <div id="telemetry-summary"></div>
+            <button id="btn-restart" class="btn">Next Spatial Block</button>
+        </section>
+    </div> 
+    <script src="app.js"></script>
+</body>
+</html>
