@@ -15,6 +15,43 @@ function switchScreen(screenId) {
     document.getElementById(screenId).classList.add('active');
 }
 
+// ==========================================================================
+// CRITICAL IPAD GLOBAL SHIELD: INTERCEPTS ALL SAFARI ZOOM/SCROLL GESTURES
+// ==========================================================================
+
+// BUG FIX 1: Absolutely blocks the screen from sliding or bouncing anywhere
+window.addEventListener('touchmove', (e) => {
+    // Only allow native scrolling if the user is inside a setup dropdown/input field
+    if (!e.target.closest('#screen-setup')) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// BUG FIX 2: Completely disables tap-to-zoom at the browser window level
+window.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) {
+        // Blocks multi-finger pinch zooming gestures
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// Global helper to prevent double-tap zooming on standard clicks
+let lastWindowTap = 0;
+window.addEventListener('touchend', (e) => {
+    const now = performance.now();
+    if (now - lastWindowTap < 250) {
+        // If they double-tap an empty area, block the browser zoom action
+        if (!e.target.classList.contains('grid-tile')) {
+            e.preventDefault();
+        }
+    }
+    lastWindowTap = now;
+}, { passive: false });
+
+// ==========================================================================
+// GAME CODE CONTROLLER
+// ==========================================================================
+
 document.getElementById('btn-start').addEventListener('click', () => {
     gridData.participant_id = document.getElementById('input-participant').value;
     gridData.session_id = document.getElementById('input-session').value;
@@ -57,14 +94,12 @@ function initializeGridPuzzle() {
         tileEl.className = 'grid-tile';
         tileEl.dataset.index = i;
 
-        // Double tap or hold detection variables
         let lastTap = 0;
         let dragGhost = null;
 
-        // BUG FIX 1 & 2: Prevent Safari from hijacking the touch start
         tileEl.addEventListener('touchstart', (e) => {
-            // Stops Safari from processing a double tap as a camera zoom
-            e.preventDefault(); 
+            // Stop tile actions from trickling up to browser behaviors
+            e.stopPropagation();
             
             const now = performance.now();
             if (now - lastTap < 250) {
@@ -77,7 +112,6 @@ function initializeGridPuzzle() {
             if (e.touches.length > 1) return;
             const touch = e.touches[0];
             
-            // Create the placeholder drag box
             dragGhost = document.createElement('div');
             dragGhost.className = 'drag-indicator-box';
             dragGhost.style.width = `${tileEl.offsetWidth}px`;
@@ -87,11 +121,10 @@ function initializeGridPuzzle() {
             document.body.appendChild(dragGhost);
             
             tileEl.classList.add('source-tile-faded');
-        }, { passive: false }); // 'passive: false' allows us to use preventDefault() safely
+        }, { passive: false });
 
-        // BUG FIX 1: Prevent Safari from scrolling or moving the screen while dragging
         tileEl.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // This stops the screen from sliding or bouncing!
+            e.stopPropagation();
             
             if (!dragGhost) return;
             const touch = e.touches[0];
@@ -100,7 +133,7 @@ function initializeGridPuzzle() {
         }, { passive: false });
 
         tileEl.addEventListener('touchend', (e) => {
-            e.preventDefault();
+            e.stopPropagation();
             
             if (!dragGhost) return;
             document.body.removeChild(dragGhost);
